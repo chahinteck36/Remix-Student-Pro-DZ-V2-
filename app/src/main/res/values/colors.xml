@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary_academic">#006B54</color>
+    <color name="primary_academic_dark">#67DCB7</color>
+    <color name="secondary_academic">#295D7A</color>
+    <color name="tertiary_academic">#905500</color>
+    <color name="background_light">#F7FAF8</color>
+    <color name="background_dark">#0F1513</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

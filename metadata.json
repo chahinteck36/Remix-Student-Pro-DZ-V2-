@@ -1,0 +1,8 @@
+{
+  "name": "Student Pro DZ",
+  "description": "الحزمة الرقمية المتكاملة للطالب الجامعي الجزائري من السنة الأولى إلى مذكرة التخرج",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
