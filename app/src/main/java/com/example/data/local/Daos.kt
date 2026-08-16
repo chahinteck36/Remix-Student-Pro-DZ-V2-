@@ -197,3 +197,34 @@ interface StudyResourceLinkDao {
     @Query("DELETE FROM study_resource_links WHERE id = :id")
     suspend fun deleteById(id: Int)
 }
+
+@Dao
+interface ImportedDocumentDao {
+    @Query("SELECT * FROM imported_documents ORDER BY isFavorite DESC, timestamp DESC")
+    fun getAllDocuments(): Flow<List<ImportedDocumentItem>>
+
+    @Query("SELECT * FROM imported_documents WHERE fileType = :fileType ORDER BY isFavorite DESC, timestamp DESC")
+    fun getDocumentsByType(fileType: String): Flow<List<ImportedDocumentItem>>
+
+    @Query("SELECT * FROM imported_documents WHERE category = :category ORDER BY isFavorite DESC, timestamp DESC")
+    fun getDocumentsByCategory(category: String): Flow<List<ImportedDocumentItem>>
+
+    @Query("SELECT * FROM imported_documents WHERE id = :id LIMIT 1")
+    suspend fun getDocumentById(id: Int): ImportedDocumentItem?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertDocument(document: ImportedDocumentItem): Long
+
+    @Update
+    suspend fun updateDocument(document: ImportedDocumentItem)
+
+    @Delete
+    suspend fun deleteDocument(document: ImportedDocumentItem)
+
+    @Query("UPDATE imported_documents SET isFavorite = :isFavorite WHERE id = :id")
+    suspend fun setFavorite(id: Int, isFavorite: Boolean)
+
+    @Query("DELETE FROM imported_documents WHERE id = :id")
+    suspend fun deleteById(id: Int)
+}
+

@@ -23,6 +23,7 @@ import com.example.ui.viewmodel.StudentProViewModel
 
 enum class ThesisSubSection(val titleAr: String, val icon: androidx.compose.ui.graphics.vector.ImageVector) {
     STRUCTURE("هيكل المذكرة الشامل", Icons.Outlined.AccountTree),
+    DOCUMENTS("مسودات وملفات (Word/PDF/XML)", Icons.Outlined.FolderSpecial),
     SURVEY("نماذج الاستبيان والتحكيم", Icons.Outlined.Quiz),
     STATS_ANALYSIS("تحليل SPSS والجداول", Icons.Outlined.BarChart),
     DEFENSE_SLIDES("سلايدات المناقشة PPT", Icons.Outlined.CoPresent)
@@ -66,32 +67,40 @@ fun ThesisPfeScreen(
             }
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            contentPadding = PaddingValues(bottom = 80.dp)
-        ) {
-            when (currentSection) {
-                ThesisSubSection.STRUCTURE -> {
-                    item {
-                        ThesisStructureCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+        if (currentSection == ThesisSubSection.DOCUMENTS) {
+            AcademicDocumentsView(
+                viewModel = viewModel,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 80.dp)
+            ) {
+                when (currentSection) {
+                    ThesisSubSection.STRUCTURE -> {
+                        item {
+                            ThesisStructureCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                        }
                     }
-                }
-                ThesisSubSection.SURVEY -> {
-                    item {
-                        SurveyBuilderCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                    ThesisSubSection.DOCUMENTS -> { /* handled above */ }
+                    ThesisSubSection.SURVEY -> {
+                        item {
+                            SurveyBuilderCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                        }
                     }
-                }
-                ThesisSubSection.STATS_ANALYSIS -> {
-                    item {
-                        StatisticalAnalysisCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                    ThesisSubSection.STATS_ANALYSIS -> {
+                        item {
+                            StatisticalAnalysisCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                        }
                     }
-                }
-                ThesisSubSection.DEFENSE_SLIDES -> {
-                    item {
-                        DefensePowerPointCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                    ThesisSubSection.DEFENSE_SLIDES -> {
+                        item {
+                            DefensePowerPointCard(onCopy = { title, text -> viewModel.copyToClipboard(context, text, title) })
+                        }
                     }
                 }
             }

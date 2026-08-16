@@ -15,9 +15,10 @@ import androidx.room.RoomDatabase
         ModuleGradeItem::class,
         SavedReference::class,
         UserProfile::class,
-        StudyResourceLink::class
+        StudyResourceLink::class,
+        ImportedDocumentItem::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -30,6 +31,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun referenceDao(): ReferenceDao
     abstract fun userDao(): UserDao
     abstract fun resourceLinkDao(): StudyResourceLinkDao
+    abstract fun importedDocumentDao(): ImportedDocumentDao
 
     companion object {
         @Volatile

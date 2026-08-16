@@ -124,3 +124,20 @@ data class StudyResourceLink(
     val isFavorite: Boolean = false,
     val timestamp: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "imported_documents")
+data class ImportedDocumentItem(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val fileName: String,
+    val fileType: String, // PDF, WORD, XML, OTHER
+    val mimeType: String,
+    val localFilePath: String = "",
+    val fileSizeBytes: Long = 0L,
+    val category: String = "محاضرات ودروس", // محاضرات ودروس, مذكرات وأطروحات, بحوث ومشاريع, تقارير TP, بيانات XML, كشوف ونماذج, عام
+    val previewText: String = "",
+    val fullContentText: String = "",
+    val notes: String = "",
+    val isFavorite: Boolean = false,
+    val timestamp: Long = System.currentTimeMillis()
+)
+

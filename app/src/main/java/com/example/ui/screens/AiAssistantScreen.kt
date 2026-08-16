@@ -1,5 +1,7 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.content.AiPromptItem
 import com.example.data.content.PromptsLibraryData
+import com.example.data.local.DocumentImportHelper
 import com.example.ui.viewmodel.AiChatState
 import com.example.ui.viewmodel.StudentProViewModel
 
@@ -43,6 +46,22 @@ fun AiAssistantScreen(
     var promptDialogItem by remember { mutableStateOf<AiPromptItem?>(null) }
 
     val categories = listOf("الكل", "فهم", "تلخيص", "أسئلة", "تحسين", "ترجمة", "خطة بحث")
+
+    val filePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            viewModel.importDocumentFromUri(context, uri, chosenCategory = "محاضرات ودروس")
+            // Also load into AI prompt
+            val docItem = DocumentImportHelper.importDocumentFromUri(context, uri)
+            val promptText = if (docItem.fullContentText.isNotBlank()) {
+                "يرجى تلخيص وشرح أهم النقاط في هذا المستند (${docItem.fileName}):\n\n${docItem.fullContentText.take(3000)}"
+            } else {
+                "أريد المساعدة في مراجعة وتلخيص هذا الملف الأكاديمي: ${docItem.fileName} (${docItem.previewText})"
+            }
+            viewModel.setAiPrompt(promptText)
+        }
+    }
     val filteredPrompts = if (selectedPromptCategory == "الكل") allPrompts else allPrompts.filter { it.category == selectedPromptCategory }
 
     Column(
@@ -196,12 +215,33 @@ fun AiAssistantScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            if (inputPrompt.isNotBlank()) {
-                                TextButton(onClick = { viewModel.setAiPrompt("") }) {
-                                    Text("مسح النص")
+                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                OutlinedButton(
+                                    onClick = {
+                                        filePickerLauncher.launch(
+                                            arrayOf(
+                                                "application/pdf",
+                                                "application/msword",
+                                                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                                                "text/xml",
+                                                "application/xml",
+                                                "text/plain",
+                                                "*/*"
+                                            )
+                                        )
+                                    },
+                                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                                ) {
+                                    Icon(Icons.Default.AttachFile, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("إرفاق PDF / Word / XML", fontSize = 11.sp)
                                 }
-                            } else {
-                                Spacer(modifier = Modifier.width(1.dp))
+
+                                if (inputPrompt.isNotBlank()) {
+                                    TextButton(onClick = { viewModel.setAiPrompt("") }) {
+                                        Text("مسح", fontSize = 11.sp)
+                                    }
+                                }
                             }
                             Button(
                                 onClick = { viewModel.sendAiPrompt() },

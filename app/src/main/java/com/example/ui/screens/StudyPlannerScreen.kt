@@ -124,6 +124,9 @@ fun StudyPlannerScreen(
                     onDeleteRecord = { viewModel.deleteAttendance(it) },
                     onAddClick = { showAddDialog = true }
                 )
+                StudyPlannerSubTab.IMPORTED_DOCS -> AcademicDocumentsView(
+                    viewModel = viewModel
+                )
                 StudyPlannerSubTab.RESOURCES -> StudyResourcesView(
                     resourceLinks = resourceLinksList,
                     onToggleFavorite = { viewModel.toggleResourceLinkFavorite(it) },
@@ -170,6 +173,9 @@ fun StudyPlannerScreen(
                     showAddDialog = false
                 }
             )
+            StudyPlannerSubTab.IMPORTED_DOCS -> {
+                showAddDialog = false
+            }
             StudyPlannerSubTab.RESOURCES -> AddResourceLinkDialog(
                 onDismiss = { showAddDialog = false },
                 onConfirm = {

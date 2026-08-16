@@ -15,7 +15,18 @@ class StudentRepository(private val db: AppDatabase) {
     val gradeItems: Flow<List<ModuleGradeItem>> = db.gradeDao().getAllGrades()
     val savedReferences: Flow<List<SavedReference>> = db.referenceDao().getAllReferences()
     val resourceLinks: Flow<List<StudyResourceLink>> = db.resourceLinkDao().getAllLinks()
+    val importedDocuments: Flow<List<ImportedDocumentItem>> = db.importedDocumentDao().getAllDocuments()
     val userProfile: Flow<UserProfile?> = db.userDao().getUserProfile()
+
+    // Imported Documents Operations
+    fun getDocumentsByType(fileType: String): Flow<List<ImportedDocumentItem>> = db.importedDocumentDao().getDocumentsByType(fileType)
+    fun getDocumentsByCategory(category: String): Flow<List<ImportedDocumentItem>> = db.importedDocumentDao().getDocumentsByCategory(category)
+    suspend fun getDocumentById(id: Int) = db.importedDocumentDao().getDocumentById(id)
+    suspend fun insertImportedDocument(doc: ImportedDocumentItem) = db.importedDocumentDao().insertDocument(doc)
+    suspend fun updateImportedDocument(doc: ImportedDocumentItem) = db.importedDocumentDao().updateDocument(doc)
+    suspend fun deleteImportedDocument(doc: ImportedDocumentItem) = db.importedDocumentDao().deleteDocument(doc)
+    suspend fun deleteImportedDocumentById(id: Int) = db.importedDocumentDao().deleteById(id)
+    suspend fun setDocumentFavorite(id: Int, isFav: Boolean) = db.importedDocumentDao().setFavorite(id, isFav)
 
     // Schedule Operations
     suspend fun insertScheduleItem(item: ScheduleItem) = db.scheduleDao().insertItem(item)

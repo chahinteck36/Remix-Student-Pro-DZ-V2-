@@ -33,6 +33,7 @@ enum class StudyPlannerSubTab(val titleAr: String) {
     TASKS("المهام والواجبات"),
     EXAMS("مخطط الامتحانات"),
     ATTENDANCE("الحضور والغياب"),
+    IMPORTED_DOCS("ملفات PDF و Word و XML"),
     RESOURCES("البوابات والمصادر"),
     LMD_CALCULATOR("حاسبة المعدل LMD")
 }
@@ -107,7 +108,18 @@ class StudentProViewModel(application: Application) : AndroidViewModel(applicati
     val gradeItems: StateFlow<List<ModuleGradeItem>>
     val savedReferences: StateFlow<List<SavedReference>>
     val resourceLinks: StateFlow<List<StudyResourceLink>>
+    val importedDocuments: StateFlow<List<ImportedDocumentItem>>
     val userProfile: StateFlow<UserProfile>
+
+    // Document Hub Filter States
+    private val _docTypeFilter = MutableStateFlow("الكل")
+    val docTypeFilter: StateFlow<String> = _docTypeFilter.asStateFlow()
+
+    private val _docCategoryFilter = MutableStateFlow("الكل")
+    val docCategoryFilter: StateFlow<String> = _docCategoryFilter.asStateFlow()
+
+    private val _importedDocSearchQuery = MutableStateFlow("")
+    val importedDocSearchQuery: StateFlow<String> = _importedDocSearchQuery.asStateFlow()
 
     // AI Assistant State
     private val _aiState = MutableStateFlow<AiChatState>(AiChatState.Idle)
@@ -178,6 +190,9 @@ class StudentProViewModel(application: Application) : AndroidViewModel(applicati
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
         )
         resourceLinks = repository.resourceLinks.stateIn(
+            viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+        )
+        importedDocuments = repository.importedDocuments.stateIn(
             viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
         )
         userProfile = repository.userProfile
@@ -636,5 +651,137 @@ class StudentProViewModel(application: Application) : AndroidViewModel(applicati
         } catch (e: Exception) {
             Toast.makeText(context, "تعذر إنشاء ملف التصدير", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    // =================================================================
+    // Imported Documents (PDF / Word / XML) Operations
+    // =================================================================
+
+    fun setDocTypeFilter(filter: String) {
+        _docTypeFilter.value = filter
+    }
+
+    fun setDocCategoryFilter(filter: String) {
+        _docCategoryFilter.value = filter
+    }
+
+    fun setImportedDocSearchQuery(query: String) {
+        _importedDocSearchQuery.value = query
+    }
+
+    fun importDocumentFromUri(
+        context: Context,
+        uri: android.net.Uri,
+        chosenCategory: String = "محاضرات ودروس",
+        notes: String = ""
+    ) = viewModelScope.launch {
+        try {
+            val docItem = DocumentImportHelper.importDocumentFromUri(
+                context = context,
+                uri = uri,
+                chosenCategory = chosenCategory,
+                userNotes = notes
+            )
+            repository.insertImportedDocument(docItem)
+            Toast.makeText(context, "تم استيراد ${docItem.fileName} بنجاح", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "فشل استيراد الملف: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    fun addManualDocument(
+        context: Context,
+        title: String,
+        fileType: String,
+        category: String,
+        content: String,
+        notes: String
+    ) = viewModelScope.launch {
+        try {
+            val docItem = DocumentImportHelper.createManualDocument(
+                context = context,
+                title = title,
+                fileType = fileType,
+                category = category,
+                content = content,
+                notes = notes
+            )
+            repository.insertImportedDocument(docItem)
+            Toast.makeText(context, "تمت إضافة المستند بنجاح", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "فشل إنشاء المستند: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun deleteImportedDocument(doc: ImportedDocumentItem) = viewModelScope.launch {
+        try {
+            val file = java.io.File(doc.localFilePath)
+            if (file.exists()) {
+                file.delete()
+            }
+        } catch (_: Exception) {}
+        repository.deleteImportedDocument(doc)
+    }
+
+    fun toggleDocumentFavorite(id: Int, isFav: Boolean) = viewModelScope.launch {
+        repository.setDocumentFavorite(id, isFav)
+    }
+
+    fun openDocumentExternal(context: Context, doc: ImportedDocumentItem) {
+        try {
+            val file = java.io.File(doc.localFilePath)
+            if (!file.exists()) {
+                Toast.makeText(context, "الملف غير موجود في التخزين الداخلي للتطبيق", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, doc.mimeType.ifBlank { "*/*" })
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(Intent.createChooser(intent, "فتح بواسطة"))
+        } catch (e: Exception) {
+            Toast.makeText(context, "تعذر فتح الملف خارجياً: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun shareDocumentFile(context: Context, doc: ImportedDocumentItem) {
+        try {
+            val file = java.io.File(doc.localFilePath)
+            if (!file.exists()) {
+                Toast.makeText(context, "الملف غير موجود", Toast.LENGTH_SHORT).show()
+                return
+            }
+            val uri = androidx.core.content.FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+            val intent = Intent(Intent.ACTION_SEND).apply {
+                type = doc.mimeType.ifBlank { "*/*" }
+                putExtra(Intent.EXTRA_STREAM, uri)
+                putExtra(Intent.EXTRA_SUBJECT, doc.fileName)
+                putExtra(Intent.EXTRA_TEXT, "مستند أكاديمي: ${doc.fileName}\n${doc.notes}")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(intent, "مشاركة الملف"))
+        } catch (e: Exception) {
+            Toast.makeText(context, "تعذر مشاركة الملف: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun sendDocumentToAiAssistant(doc: ImportedDocumentItem) {
+        val prompt = if (doc.fullContentText.isNotBlank()) {
+            "يرجى تلخيص وتحليل هذا المستند الجامعي المستورد (${doc.fileName} - نوعه: ${doc.fileType}):\n\n${doc.fullContentText.take(3500)}"
+        } else {
+            "أحتاج مساعدة أكاديمية وتوجيهاً بخصوص هذا الملف (${doc.fileName} - تصنيف: ${doc.category}). ما هي أهم التوجيهات لدراسته وتلخيصه؟"
+        }
+        _aiInputPrompt.value = prompt
+        _currentTab.value = MainAppTab.AI_ASSISTANT
     }
 }
