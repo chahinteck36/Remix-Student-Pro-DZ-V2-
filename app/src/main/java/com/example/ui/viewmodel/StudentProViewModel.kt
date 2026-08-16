@@ -25,6 +25,7 @@ enum class MainAppTab(val titleAr: String, val iconName: String) {
     THESIS_PFE("المذكرة والتخرج", "School"),
     CITATIONS("المراجع والتوثيق", "FormatQuote"),
     AI_ASSISTANT("المساعد الذكي", "AutoAwesome"),
+    NOTEBOOK_LM("NotebookLM", "CollectionsBookmark"),
     ADMIN_DOCS("النماذج الإدارية", "Article")
 }
 
@@ -772,6 +773,12 @@ class StudentProViewModel(application: Application) : AndroidViewModel(applicati
             context.startActivity(Intent.createChooser(intent, "مشاركة الملف"))
         } catch (e: Exception) {
             Toast.makeText(context, "تعذر مشاركة الملف: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun resetAllData() {
+        viewModelScope.launch {
+            repository.resetAllUserData()
         }
     }
 

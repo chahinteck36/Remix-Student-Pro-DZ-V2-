@@ -135,6 +135,7 @@ fun MainAppScreen(
                         MainAppTab.THESIS_PFE -> if (isSelected) Icons.Filled.School else Icons.Outlined.School
                         MainAppTab.CITATIONS -> if (isSelected) Icons.Filled.FormatQuote else Icons.Outlined.FormatQuote
                         MainAppTab.AI_ASSISTANT -> if (isSelected) Icons.Filled.AutoAwesome else Icons.Outlined.AutoAwesome
+                        MainAppTab.NOTEBOOK_LM -> if (isSelected) Icons.Filled.CollectionsBookmark else Icons.Outlined.CollectionsBookmark
                         MainAppTab.ADMIN_DOCS -> if (isSelected) Icons.Filled.Article else Icons.Outlined.Article
                     }
 
@@ -145,6 +146,7 @@ fun MainAppScreen(
                         MainAppTab.THESIS_PFE -> "المذكرة"
                         MainAppTab.CITATIONS -> "المراجع"
                         MainAppTab.AI_ASSISTANT -> "الذكاء"
+                        MainAppTab.NOTEBOOK_LM -> "Notebook"
                         MainAppTab.ADMIN_DOCS -> "الوثائق"
                     }
 
@@ -179,6 +181,7 @@ fun MainAppScreen(
                 MainAppTab.THESIS_PFE -> ThesisPfeScreen(viewModel = viewModel)
                 MainAppTab.CITATIONS -> CitationsScreen(viewModel = viewModel)
                 MainAppTab.AI_ASSISTANT -> AiAssistantScreen(viewModel = viewModel)
+                MainAppTab.NOTEBOOK_LM -> NotebookLmScreen(viewModel = viewModel)
                 MainAppTab.ADMIN_DOCS -> AdminDocsScreen(
                     viewModel = viewModel,
                     onOpenProfileEdit = { showProfileDialog = true }
@@ -359,15 +362,15 @@ fun ProfileEditDialog(
                 onClick = {
                     onSave(
                         userProfile.copy(
-                            fullName = name.ifBlank { "محمد أمين" },
-                            university = uni,
-                            faculty = faculty,
-                            department = dept,
-                            specialty = spec,
-                            academicLevel = level,
-                            studentIdNumber = matricule,
-                            email = email,
-                            phone = phone
+                            fullName = name.trim(),
+                            university = uni.trim(),
+                            faculty = faculty.trim(),
+                            department = dept.trim(),
+                            specialty = spec.trim(),
+                            academicLevel = level.trim(),
+                            studentIdNumber = matricule.trim(),
+                            email = email.trim(),
+                            phone = phone.trim()
                         )
                     )
                 },

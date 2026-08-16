@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -145,7 +146,8 @@ fun AcademicDocumentsView(
                             )
                         )
                     },
-                    onOpenManualInput = { showManualAddDialog = true }
+                    onOpenManualInput = { showManualAddDialog = true },
+                    onOpenNotebookLm = { viewModel.setTab(com.example.ui.viewmodel.MainAppTab.NOTEBOOK_LM) }
                 )
             }
 
@@ -298,6 +300,12 @@ fun AcademicDocumentsView(
             onAiAnalyze = {
                 showPreviewDialog = null
                 viewModel.sendDocumentToAiAssistant(doc)
+            },
+            onOpenNotebookLm = {
+                viewModel.copyToClipboard(context, doc.fullContentText.ifBlank { doc.previewText }, doc.fileName)
+                Toast.makeText(context, "تم نسخ محتوى المستند! يمكنك لصقه الآن في NotebookLM كأحد المصادر.", Toast.LENGTH_LONG).show()
+                showPreviewDialog = null
+                viewModel.setTab(com.example.ui.viewmodel.MainAppTab.NOTEBOOK_LM)
             }
         )
     }
@@ -335,7 +343,8 @@ fun DocumentHubHeroCard(
     wordCount: Int,
     xmlCount: Int,
     onPickFile: () -> Unit,
-    onOpenManualInput: () -> Unit
+    onOpenManualInput: () -> Unit,
+    onOpenNotebookLm: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -421,6 +430,48 @@ fun DocumentHubHeroCard(
                     Icon(Icons.Default.Code, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("إدخال كود XML / نص", fontSize = 12.sp)
+                }
+            }
+
+            // Direct NotebookLM Action
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFF1A73E8).copy(alpha = 0.12f),
+                modifier = Modifier.fillMaxWidth().clickable { onOpenNotebookLm() }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.CollectionsBookmark,
+                            contentDescription = null,
+                            tint = Color(0xFF1A73E8),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = "فتح وتلخيص في Google NotebookLM",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1A73E8)
+                            )
+                            Text(
+                                text = "بودكاست صوتي ونظرة تحليلية شاملة عبر Gemini",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = Color(0xFF1A73E8),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -986,7 +1037,8 @@ fun DocumentPreviewDialog(
     onDismiss: () -> Unit,
     onCopy: () -> Unit,
     onOpenExternal: () -> Unit,
-    onAiAnalyze: () -> Unit
+    onAiAnalyze: () -> Unit,
+    onOpenNotebookLm: () -> Unit = {}
 ) {
     val displayContent = doc.fullContentText.ifBlank { doc.previewText }
 
@@ -1105,23 +1157,34 @@ fun DocumentPreviewDialog(
             }
         },
         confirmButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(
-                    onClick = onAiAnalyze,
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("تحليل ذكي")
-                }
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onAiAnalyze,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("تحليل ذكي", fontSize = 12.sp)
+                    }
 
-                OutlinedButton(
-                    onClick = onOpenExternal,
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Default.Launch, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("فتح")
+                    OutlinedButton(
+                        onClick = onOpenNotebookLm,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.CollectionsBookmark, contentDescription = null, tint = Color(0xFF1A73E8), modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("NotebookLM", fontSize = 12.sp, color = Color(0xFF1A73E8))
+                    }
+
+                    OutlinedButton(
+                        onClick = onOpenExternal,
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(Icons.Default.Launch, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("فتح", fontSize = 12.sp)
+                    }
                 }
             }
         },

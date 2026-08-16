@@ -103,15 +103,15 @@ data class SavedReference(
 @Entity(tableName = "user_profile")
 data class UserProfile(
     @PrimaryKey val id: Int = 1,
-    val fullName: String = "محمد أمين بن علي",
-    val university: String = "جامعة الجزائر 1 - بن يوسف بن خدة",
-    val faculty: String = "كلية العلوم والتكنولوجيا",
-    val department: String = "قسم الإعلام الآلي",
-    val specialty: String = "إعلام آلي - ذكاء اصطناعي",
-    val academicLevel: String = "ماستر 2 (Master 2)",
-    val studentIdNumber: String = "202131054890",
-    val email: String = "etudiant@univ-alger.dz",
-    val phone: String = "0661234567"
+    val fullName: String = "",
+    val university: String = "",
+    val faculty: String = "",
+    val department: String = "",
+    val specialty: String = "",
+    val academicLevel: String = "",
+    val studentIdNumber: String = "",
+    val email: String = "",
+    val phone: String = ""
 )
 
 @Entity(tableName = "study_resource_links")

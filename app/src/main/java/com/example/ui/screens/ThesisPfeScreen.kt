@@ -80,6 +80,49 @@ fun ThesisPfeScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                // NotebookLM Quick Access Banner for Thesis
+                item {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF1A73E8).copy(alpha = 0.1f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Icon(
+                                    Icons.Default.CollectionsBookmark,
+                                    contentDescription = null,
+                                    tint = Color(0xFF1A73E8),
+                                    modifier = Modifier.size(22.dp)
+                                )
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        "مفكرة Google NotebookLM لمذكرتك",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp,
+                                        color = Color(0xFF1A73E8)
+                                    )
+                                    Text(
+                                        "اربط مقالاتك ودراساتك السابقة لصياغة الإشكالية وتوليد نقاش صوتي.",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            TextButton(
+                                onClick = { viewModel.setTab(com.example.ui.viewmodel.MainAppTab.NOTEBOOK_LM) },
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text("فتح المفكرة", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A73E8))
+                            }
+                        }
+                    }
+                }
                 when (currentSection) {
                     ThesisSubSection.STRUCTURE -> {
                         item {

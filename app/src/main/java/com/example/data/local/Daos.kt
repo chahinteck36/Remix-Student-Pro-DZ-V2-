@@ -25,6 +25,9 @@ interface ScheduleDao {
 
     @Query("DELETE FROM schedule_items WHERE id = :id")
     suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM schedule_items")
+    suspend fun deleteAllSchedule()
 }
 
 @Dao
@@ -43,6 +46,9 @@ interface ExamDao {
 
     @Delete
     suspend fun deleteExam(exam: ExamItem)
+
+    @Query("DELETE FROM exam_items")
+    suspend fun deleteAllExams()
 }
 
 @Dao
@@ -61,6 +67,9 @@ interface TaskDao {
 
     @Delete
     suspend fun deleteTask(task: TaskItem)
+
+    @Query("DELETE FROM task_items")
+    suspend fun deleteAllTasks()
 }
 
 @Dao
@@ -94,6 +103,9 @@ interface SemesterTaskDao {
 
     @Query("DELETE FROM semester_tasks WHERE id = :id")
     suspend fun deleteById(id: Int)
+
+    @Query("DELETE FROM semester_tasks")
+    suspend fun deleteAllSemesterTasks()
 }
 
 @Dao
@@ -112,6 +124,9 @@ interface AttendanceDao {
 
     @Delete
     suspend fun deleteAttendance(record: AttendanceRecord)
+
+    @Query("DELETE FROM attendance_records")
+    suspend fun deleteAllAttendance()
 }
 
 @Dao
@@ -160,6 +175,9 @@ interface ReferenceDao {
 
     @Delete
     suspend fun deleteReference(ref: SavedReference)
+
+    @Query("DELETE FROM saved_references")
+    suspend fun deleteAllReferences()
 }
 
 @Dao
