@@ -50,6 +50,7 @@ fun AcademicProgressScreen(
     var editingGradeItem by remember { mutableStateOf<ModuleGradeItem?>(null) }
     var showPresetsDialog by remember { mutableStateOf(false) }
     var showTranscriptDialog by remember { mutableStateOf(false) }
+    var showProgresSyncDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf<ModuleGradeItem?>(null) }
     var showClearSemesterDialog by remember { mutableStateOf(false) }
 
@@ -117,7 +118,8 @@ fun AcademicProgressScreen(
             item {
                 AcademicHeader(
                     onOpenPresets = { showPresetsDialog = true },
-                    onExportTranscript = { showTranscriptDialog = true }
+                    onExportTranscript = { showTranscriptDialog = true },
+                    onOpenProgresSync = { showProgresSyncDialog = true }
                 )
             }
 
@@ -337,6 +339,14 @@ fun AcademicProgressScreen(
             }
         )
     }
+
+    // PROGRES WebEtu Direct Synchronization Dialog
+    if (showProgresSyncDialog) {
+        ProgresSyncDialog(
+            viewModel = viewModel,
+            onDismiss = { showProgresSyncDialog = false }
+        )
+    }
 }
 
 // ---------------------- Sub-composables ----------------------
@@ -344,7 +354,8 @@ fun AcademicProgressScreen(
 @Composable
 private fun AcademicHeader(
     onOpenPresets: () -> Unit,
-    onExportTranscript: () -> Unit
+    onExportTranscript: () -> Unit,
+    onOpenProgresSync: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -371,6 +382,19 @@ private fun AcademicHeader(
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                IconButton(
+                    onClick = onOpenProgresSync,
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    Icon(
+                        Icons.Default.CloudSync,
+                        contentDescription = "مزامنة منصة بروقرس (PROGRES)",
+                        tint = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
+
                 IconButton(
                     onClick = onOpenPresets,
                     modifier = Modifier

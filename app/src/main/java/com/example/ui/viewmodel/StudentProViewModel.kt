@@ -155,6 +155,14 @@ class StudentProViewModel(application: Application) : AndroidViewModel(applicati
     private val _selectedDocLanguage = MutableStateFlow("الكل")
     val selectedDocLanguage: StateFlow<String> = _selectedDocLanguage.asStateFlow()
 
+    // PROGRES MESRS Integration State
+    private val progresClient = com.example.data.progres.ProgresDirectSyncClient()
+    private val _progresSyncState = MutableStateFlow<com.example.data.progres.ProgresSyncState>(com.example.data.progres.ProgresSyncState.Idle)
+    val progresSyncState: StateFlow<com.example.data.progres.ProgresSyncState> = _progresSyncState.asStateFlow()
+
+    private val _progresStudentCard = MutableStateFlow<com.example.data.progres.ProgresStudentCardInfo?>(null)
+    val progresStudentCard: StateFlow<com.example.data.progres.ProgresStudentCardInfo?> = _progresStudentCard.asStateFlow()
+
     // Academic Progress State
     private val _selectedAcademicYear = MutableStateFlow(1)
     val selectedAcademicYear: StateFlow<Int> = _selectedAcademicYear.asStateFlow()
@@ -790,5 +798,59 @@ class StudentProViewModel(application: Application) : AndroidViewModel(applicati
         }
         _aiInputPrompt.value = prompt
         _currentTab.value = MainAppTab.AI_ASSISTANT
+    }
+
+    // PROGRES WebEtu Direct Synchronization
+    fun syncWithProgresDirect(
+        matricule: String,
+        password: String,
+        academicYearStr: String = "2024/2025"
+    ) = viewModelScope.launch {
+        _progresSyncState.value = com.example.data.progres.ProgresSyncState.Connecting
+        val result = progresClient.authenticateAndSync(
+            matriculeInput = matricule,
+            passwordInput = password,
+            targetAcademicYear = academicYearStr
+        )
+
+        result.fold(
+            onSuccess = { (cardInfo, importedGrades) ->
+                _progresStudentCard.value = cardInfo
+
+                // Update User Profile with Official PROGRES info
+                val currentP = userProfile.value
+                val updatedProfile = currentP.copy(
+                    fullName = cardInfo.studentName,
+                    studentIdNumber = cardInfo.matricule,
+                    university = cardInfo.university,
+                    faculty = cardInfo.faculty,
+                    specialty = cardInfo.specialty,
+                    academicLevel = cardInfo.level
+                )
+                repository.saveUserProfile(updatedProfile)
+
+                // Insert/Merge modules into local Room database
+                var count = 0
+                for (module in importedGrades) {
+                    repository.insertGrade(module)
+                    count++
+                }
+
+                _progresSyncState.value = com.example.data.progres.ProgresSyncState.Success(
+                    studentInfo = cardInfo,
+                    importedGradesCount = count,
+                    message = "تمت المزامنة بنجاح واستيراد البطاقة الجامعية وكشف المواد"
+                )
+            },
+            onFailure = { error ->
+                _progresSyncState.value = com.example.data.progres.ProgresSyncState.Error(
+                    errorMessage = error.localizedMessage ?: "تعذر الاتصال بخادم بروقرس المركزي. يرجى التحقق من رقم التسجيل وكلمة المرور."
+                )
+            }
+        )
+    }
+
+    fun resetProgresSyncState() {
+        _progresSyncState.value = com.example.data.progres.ProgresSyncState.Idle
     }
 }

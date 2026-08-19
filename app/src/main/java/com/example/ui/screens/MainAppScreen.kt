@@ -2,6 +2,7 @@ package com.example.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.R
 import com.example.data.local.UserProfile
+import com.example.ui.viewmodel.AiChatState
 import com.example.ui.viewmodel.MainAppTab
 import com.example.ui.viewmodel.StudentProViewModel
 
@@ -34,6 +36,7 @@ fun MainAppScreen(
     val currentTab by viewModel.currentTab.collectAsStateWithLifecycle()
     val userProfile by viewModel.userProfile.collectAsStateWithLifecycle()
     val isDarkMode by viewModel.isDarkMode.collectAsStateWithLifecycle()
+    val aiState by viewModel.aiState.collectAsStateWithLifecycle()
     var showProfileDialog by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -187,6 +190,51 @@ fun MainAppScreen(
                     onOpenProfileEdit = { showProfileDialog = true }
                 )
             }
+
+            // Global Loading Indicator for Gemini API Calls
+            androidx.compose.animation.AnimatedVisibility(
+                visible = aiState is AiChatState.Loading,
+                enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically { -it },
+                exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.slideOutVertically { -it },
+                modifier = Modifier
+                    .align(Alignment.TopCenter)
+                    .padding(top = 12.dp, start = 16.dp, end = 16.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    tonalElevation = 6.dp,
+                    shadowElevation = 8.dp,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                    modifier = Modifier.testTag("global_gemini_loading_indicator")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .testTag("global_gemini_circular_progress"),
+                            strokeWidth = 2.5.dp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Text(
+                            text = "جاري المعالجة بواسطة Gemini AI...",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
         }
     }
 
@@ -195,6 +243,10 @@ fun MainAppScreen(
             userProfile = userProfile,
             isDarkMode = isDarkMode,
             onToggleDarkMode = { viewModel.setDarkMode(it) },
+            onOpenProgresSync = {
+                showProfileDialog = false
+                viewModel.setTab(MainAppTab.ACADEMIC_PROGRESS)
+            },
             onDismiss = { showProfileDialog = false },
             onSave = {
                 viewModel.updateUserProfile(it)
@@ -209,18 +261,19 @@ fun ProfileEditDialog(
     userProfile: UserProfile,
     isDarkMode: Boolean = false,
     onToggleDarkMode: (Boolean) -> Unit = {},
+    onOpenProgresSync: () -> Unit = {},
     onDismiss: () -> Unit,
     onSave: (UserProfile) -> Unit
 ) {
-    var name by remember { mutableStateOf(userProfile.fullName) }
-    var uni by remember { mutableStateOf(userProfile.university) }
-    var faculty by remember { mutableStateOf(userProfile.faculty) }
-    var dept by remember { mutableStateOf(userProfile.department) }
-    var spec by remember { mutableStateOf(userProfile.specialty) }
-    var level by remember { mutableStateOf(userProfile.academicLevel) }
-    var matricule by remember { mutableStateOf(userProfile.studentIdNumber) }
-    var email by remember { mutableStateOf(userProfile.email) }
-    var phone by remember { mutableStateOf(userProfile.phone) }
+    var name by remember(userProfile) { mutableStateOf(userProfile.fullName) }
+    var uni by remember(userProfile) { mutableStateOf(userProfile.university) }
+    var faculty by remember(userProfile) { mutableStateOf(userProfile.faculty) }
+    var dept by remember(userProfile) { mutableStateOf(userProfile.department) }
+    var spec by remember(userProfile) { mutableStateOf(userProfile.specialty) }
+    var level by remember(userProfile) { mutableStateOf(userProfile.academicLevel) }
+    var matricule by remember(userProfile) { mutableStateOf(userProfile.studentIdNumber) }
+    var email by remember(userProfile) { mutableStateOf(userProfile.email) }
+    var phone by remember(userProfile) { mutableStateOf(userProfile.phone) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -236,6 +289,52 @@ fun ProfileEditDialog(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item {
+                    // Quick PROGRES Auto-fill Banner
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.6f),
+                        border = androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.5f)
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onOpenProgresSync() }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudSync,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "استيراد تلقائي من بروقرس PROGRES",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                                Text(
+                                    text = "جلب الاسم والجامعة والتخصص وكشف النقاط مباشرة",
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.Default.ChevronLeft,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.tertiary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    }
+                }
                 item {
                     // Late Night Study Mode Theme Card
                     Surface(
